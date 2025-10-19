@@ -108,7 +108,6 @@
             </div>
             <div class="summary">
                 <div class="summary-row"><span>Subtotal</span><span id="subtotal">Rp 0</span></div>
-                <div class="summary-row"><span>Pajak (11%)</span><span id="tax">Rp 0</span></div>
                 <div class="summary-row total"><span>Total</span><span id="total">Rp 0</span></div>
                 <button id="pay-button" class="pay-button" disabled>BAYAR</button>
             </div>
@@ -203,7 +202,6 @@
                 productList: document.getElementById('product-list'),
                 cartItems: document.getElementById('cart-items'),
                 subtotal: document.getElementById('subtotal'),
-                tax: document.getElementById('tax'),
                 total: document.getElementById('total'),
                 payButton: document.getElementById('pay-button'),
                 searchInput: document.getElementById('search-product'),
@@ -302,7 +300,7 @@
                 updateSummary();
             };
 
-            const updateSummary = () => { const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0); const tax = subtotal * 0.11; totalAmount = subtotal + tax; DOM.subtotal.textContent = formatCurrency(subtotal); DOM.tax.textContent = formatCurrency(tax); DOM.total.textContent = formatCurrency(totalAmount); DOM.payButton.disabled = cart.length === 0; };
+            const updateSummary = () => { const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0); const tax = 0; totalAmount = subtotal + tax; DOM.tax.textContent = formatCurrency(tax); DOM.total.textContent = formatCurrency(totalAmount); DOM.payButton.disabled = cart.length === 0; };
             const handleSearch = () => { const term = DOM.searchInput.value.toLowerCase(); if(term.length > 12 && !isNaN(term)) { const product = allProducts.find(p => p.barcode && p.barcode.toString() === term); if(product) { app.addToCart(product.id); DOM.searchInput.value = ''; renderProducts(allProducts); return; } } const filtered = allProducts.filter(p => p.name.toLowerCase().includes(term)); renderProducts(filtered); };
             const updateChange = () => { const cashAmount = parseFloat(DOM.cashAmountInput.value.replace(/[^0-9]/g, '')) || 0; let change = cashAmount - totalAmount; DOM.changeAmount.textContent = formatCurrency(change < 0 ? 0 : change); DOM.processPaymentBtn.disabled = cashAmount < totalAmount; };
             const loadSalesData = () => { const savedSales = localStorage.getItem('tokoSejahteraSales'); if (savedSales) salesData = JSON.parse(savedSales); };
@@ -371,7 +369,7 @@
                     app.closePaymentModal(); 
                     DOM.receiptModal.classList.remove('hidden'); 
                 },
-                generateReceipt: () => { const now = new Date(); const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0); let receipt = `DAPUR OMAH\nBapangan Rt/Rw 03/02, Mendenrejo \n--------------------------------\nKasir: Admin\nWaktu: ${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID')}\n--------------------------------\n`; cart.forEach(item => { const total = (item.quantity * item.price).toLocaleString('id-ID'); receipt += `${item.name} (${item.quantity}x)\n${''.padStart(32-total.length)}${total}\n`; }); receipt += `--------------------------------\nSubtotal:${formatCurrency(subtotal).padStart(23)}\nPajak(11%):${formatCurrency(subtotal * 0.11).padStart(20)}\nTotal:${formatCurrency(totalAmount).padStart(26)}\n--------------------------------\n`; if(currentPaymentMethod === 'cash') { const cashGiven = parseFloat(DOM.cashAmountInput.value.replace(/[^0-9]/g, '')) || totalAmount; receipt += `Tunai:${formatCurrency(cashGiven).padStart(26)}\nKembali:${DOM.changeAmount.textContent.padStart(24)}\n`; } else { receipt += `Metode: Kartu/QRIS\nStatus: LUNAS\n`; } receipt += `\nTerima kasih telah berbelanja!`; DOM.receiptContent.textContent = receipt; },
+                generateReceipt: () => { const now = new Date(); const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0); let receipt = `DAPUR OMAH\nBapangan Rt/Rw 03/02, Mendenrejo \n--------------------------------\nKasir: Admin\nWaktu: ${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID')}\n--------------------------------\n`; cart.forEach(item => { const total = (item.quantity * item.price).toLocaleString('id-ID'); receipt += `${item.name} (${item.quantity}x)\n${''.padStart(32-total.length)}${total}\n`; }); receipt += `--------------------------------\nSubtotal:${formatCurrency(subtotal).padStart(23)}\nTotal:${formatCurrency(totalAmount).padStart(26)}\n--------------------------------\n`; if(currentPaymentMethod === 'cash') { const cashGiven = parseFloat(DOM.cashAmountInput.value.replace(/[^0-9]/g, '')) || totalAmount; receipt += `Tunai:${formatCurrency(cashGiven).padStart(26)}\nKembali:${DOM.changeAmount.textContent.padStart(24)}\n`; } else { receipt += `Metode: Kartu/QRIS\nStatus: LUNAS\n`; } receipt += `\nTerima kasih telah berbelanja!`; DOM.receiptContent.textContent = receipt; },
                 printReceipt: () => { const pwin = window.open('', 'PRINT', 'height=600,width=400'); pwin.document.write(`<html><head><title>Struk</title><style>body{font-family:monospace;font-size:12px}pre{white-space:pre-wrap}</style></head><body><pre>${DOM.receiptContent.textContent}</pre></body></html>`); pwin.document.close(); pwin.focus(); pwin.print(); pwin.close(); },
                 startNewTransaction: () => { cart = []; DOM.receiptModal.classList.add('hidden'); renderCart(); },
                 openSalesReportModal: () => { DOM.salesReportBody.innerHTML = ''; if (salesData.length === 0) { DOM.salesReportBody.innerHTML = `<tr><td colspan="3" style="text-align: center;">Belum ada penjualan yang tercatat.</td></tr>`; } else { salesData.forEach(sale => { const row = document.createElement('tr'); const totalItems = sale.items.reduce((acc, item) => acc + item.quantity, 0); row.innerHTML = `<td>${new Date(sale.timestamp).toLocaleString('id-ID')}</td><td>${totalItems}</td><td>${formatCurrency(sale.total)}</td>`; DOM.salesReportBody.appendChild(row); }); } const totalRevenue = salesData.reduce((acc, sale) => acc + sale.total, 0); DOM.reportSummary.textContent = `Total Pendapatan: ${formatCurrency(totalRevenue)}`; DOM.salesReportModal.classList.remove('hidden'); },
