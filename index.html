@@ -300,14 +300,27 @@
                 updateSummary();
             };
 
-            const updateSummary = () => { const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0); const tax = 0; totalAmount = subtotal + tax; DOM.tax.textContent = formatCurrency(tax); DOM.total.textContent = formatCurrency(totalAmount); DOM.payButton.disabled = cart.length === 0; };
+            // --- PERBAIKAN KODE DIMULAI DI SINI ---
+            const updateSummary = () => {
+                const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                const tax = 0; // Pajak 0, jadi bisa disederhanakan
+                totalAmount = subtotal + tax;
+
+                // Memperbarui tampilan subtotal dan total
+                DOM.subtotal.textContent = formatCurrency(subtotal);
+                DOM.total.textContent = formatCurrency(totalAmount);
+
+                // Mengaktifkan atau menonaktifkan tombol bayar berdasarkan isi keranjang
+                DOM.payButton.disabled = cart.length === 0;
+            };
+            // --- PERBAIKAN KODE SELESAI DI SINI ---
+            
             const handleSearch = () => { const term = DOM.searchInput.value.toLowerCase(); if(term.length > 12 && !isNaN(term)) { const product = allProducts.find(p => p.barcode && p.barcode.toString() === term); if(product) { app.addToCart(product.id); DOM.searchInput.value = ''; renderProducts(allProducts); return; } } const filtered = allProducts.filter(p => p.name.toLowerCase().includes(term)); renderProducts(filtered); };
             const updateChange = () => { const cashAmount = parseFloat(DOM.cashAmountInput.value.replace(/[^0-9]/g, '')) || 0; let change = cashAmount - totalAmount; DOM.changeAmount.textContent = formatCurrency(change < 0 ? 0 : change); DOM.processPaymentBtn.disabled = cashAmount < totalAmount; };
             const loadSalesData = () => { const savedSales = localStorage.getItem('tokoSejahteraSales'); if (savedSales) salesData = JSON.parse(savedSales); };
             const saveSalesData = () => localStorage.setItem('tokoSejahteraSales', JSON.stringify(salesData));
 
             async function saveTransactionToSheet(transaction) {
-                // PERBAIKAN: Pemeriksaan URL placeholder yang benar
                 if (GOOGLE_SCRIPT_URL === 'URL_WEB_APP_ANDA_DI_SINI' || !GOOGLE_SCRIPT_URL) {
                     console.warn('URL Google Script belum diatur. Laporan tidak disimpan online.');
                     return;
@@ -398,4 +411,3 @@
     </script>
 </body>
 </html>
-
